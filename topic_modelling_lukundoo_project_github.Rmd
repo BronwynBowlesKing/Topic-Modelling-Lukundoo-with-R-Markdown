@@ -1,0 +1,448 @@
+---
+title: "Topic modelling with a corpus of early 20th-century 'horror'"
+author: "Bronwyn Bowles-King"
+date: "2025-04-14"
+output:
+  html_document: default
+---
+
+#### **STEP 0A: PREPARATION - SET WORKING DIRECTORY (wd), INSTALL AND LOAD LIBRARIES** {style="color: green"}
+
+```{r}
+knitr::opts_knit$set(root.dir = "your/working/directory/pathway")
+getwd()
+```
+
+**Install libraries if necessary (in the console)**
+
+```{r}
+# install.packages(c("stringi", "readr", "tidyverse", "tidytext", "dplyr",  
+# "textstem", "tidyr", "topicmodels", "ggplot2", "text2vec", "gtools", "vctrs"))
+```
+
+**Load libraries and package versions**
+
+```{r}
+library(gtools)
+library(stringi)
+library(tidyverse)
+library(tidytext)
+library(textstem) 
+packageVersion("textstem")
+library(tidyr)
+packageVersion("tidyr")
+library(topicmodels)
+library(text2vec)
+packageVersion("text2vec")
+library("vctrs")
+```
+
+#### STEP 0B: LOAD TEXT FILES {style="color: green"}
+
+```{r}
+file_dir <- "your/file/directory/pathway" # Set directory for where your text files are saved
+
+files <- list.files(file_dir, pattern = "\\.txt$", full.names = TRUE) # Load all .txt files into file_dir
+```
+
+#### STEP 1A: CLEAN THE TEXT {style="color: green"}
+
+```{r}
+clean_text <- function(text) { # Create cleaning function
+text <- iconv(text, from = "UTF-8", to = "UTF-8", sub = "") # Ensure UTF-8 is properly encoded and invalid characters are removed
+text <- gsub("[\n\r\t]", " ", text) # Replace white space with a space
+return(text)
+}
+
+process_files <- function(file) { # Create helper (looping) function 
+message(paste("Processing:", file))
+text <- read_file(file)
+cleaned_text <- clean_text(text) # Use cleaning function created above
+write_file(cleaned_text, file) # Save cleaned .txt file with the same file name
+}
+
+lapply(files, process_files) # Run helper function (looping) on all files
+
+files <- list.files(file_dir, pattern = "\\.txt$", full.names = TRUE) # Overwrite with cleaned files 
+length(files)
+
+texts <- tibble(doc_id = basename(files), text = sapply(files, read_file)) # Create clean table (tibble) with file names as IDs and cleaned data
+texts
+```
+
+#### STEP 1B: TOKENISE THE TEXT {style="color: green"}
+
+```{r}
+tokens <- texts %>%
+unnest_tokens(word, text)
+View(tokens)
+dim(tokens)
+avg_words_per_file <- nrow(tokens)/length(files)
+avg_words_per_file
+```
+
+#### STEP 2A: CREATE A TERM FILTER LIST {style="color: green"}
+
+-   Various iterations of topic modelling can and have been run for the corpus with and without lemmatising and removing filter terms and stopwords.
+
+-   A goal of the quantitative component of the research is to get a sense of the overall thematic structure of the corpus.
+
+-   The term `filter_list` created below includes common words in the corpus that do not indicate theme or topic and skew the results towards words such as character names and conjunctions. This leads to 'undercooked' or 'overcooked' topics with poor interpretability.
+
+-   It was found that using a term `filter_list`, removing stopwords and lemmatising the text best achieved the goal of arriving at sets of related terms that could be considered in relation to one another.
+
+```{r}
+filter_list <- c(
+  
+  # i. Character names and other proper nouns 
+  "Alfandega", "Singleton", "Van Rieten", "Ralph Stone", "Ralph", "Susie", "Van",
+  "Rieten", "Werner", "Thorkell", "Thwaite", "Vargas", "Rivvin", "Waldo", 
+  "Mattie", "Anna", "Pake", "Ernest", "Paca", "Hibbard", "Buck", "Rex", "Leslie", 
+  "Brundige", "Tom", "Guimaraes", "Alf", "Orodoff", "Twombly", "Etcham", "Hamed", 
+  "Burghash", "Brexington", "Mang-Battu", "Rastus", "Mary", "Amy", "Hofstadir",
+  "Thorstein", "Kenton", "Thordis", "Beverly", "Hassan", "Stone", "Llewellyn", 
+  "Helen", "Pembroke", "Alders", "Radnor", "Thorarna", "Vilgerdson", "Mang",
+  "Battu", "rieten", "mang", "battu", "vilgerdson", "thordis", "beverly", "hassan",
+  "singleton", "van rieten", "mang-battu",   "ralph stone", "ralph", "susie", 
+  "battu", "rastus", "mary", "amy", "alfandega",  "mattie", "anna", "pake", "van",
+  "ernest", "paca", "hibbard", "buck", "rex", "leslie", "hofstadir", "brexington",
+  "brundige", "tom", "guimaraes", "alf", "orodoff", "twombly", "etcham", "hamed", 
+  "burghash", "werner", "thorkell", "thwaite", "vargas", "rivvin", "waldo", 
+  "thorstein", "llewellyn", "helen", "pembroke", "alders", "radnor", "thorarna", 
+    
+  
+  # ii. Common adjectives and adverbs
+  "accurately", "actively", "admittedly", "almost", "already", "alternately", 
+  "always", "artificially", "automatically", "back", "bad", "barely", "big", 
+  "boldly", "calmly", "carelessly", "cautiously", "certainly", "cheerfully", 
+  "clearly", "cleverly", "closely", "coincidentally", "commonly", "complete", 
+  "completely", "consistently", "conveniently", "cooperatively", "correctly", 
+  "creatively", "deeply", "deliberately", "desperately", "dramatically", 
+  "easily", "efficiently", "energetically", "enthusiastically", "exclusively", 
+  "extreme", "extremely", "fairly", "fast", "finally", "freely", "fully", 
+  "generally", "good", "hardly", "highly", "incredibly", "incomplete", 
+  "independently", "instantly", "intensely", "just", "justly", "kindly", 
+  "largely", "lot", "lots", "loosely", "loudly", "mainly", "many", "mere",
+  "merely", "mildly", "most", "mostly", "much", "naturally", "nearly", "no", 
+  "normal", "normally", "obviously", "odd", "oddly", "often", "only", 
+  "originally", "partially", "perfectly", "personally", "pleasantly", "poorly", 
+  "powerfully", "quiet", "quietly", "quick", "quickly", "quite", "rather", 
+  "rarely", "readily", "really", "remarkably", "rightly", "roughly", "sadly", 
+  "safely", "scarcely", "seriously", "sharply", "short", "similarly", "simply", 
+  "slightly", "slow", "slowly", "small", "smoothly", "softly", "solely", 
+  "sometimes", "soon", "speedily", "strongly", "suddenly", "swiftly", "tightly", 
+  "too", "total", "totally", "typical", "typically", "unjustly", "unusual", 
+  "unusually", "usual", "utterly", "vaguely", "very", "vigorously", "violently", 
+  "virtually", "visibly", "warmly", "weakly", "well", "wisely", "wonderfully", 
+  "wrongly", "yes", "apparently",
+  
+  # iii. Conjunctions
+  "accordingly", "addition", "additionally", "after", "again", "along", 
+  "also", "although", "and", "anyhow", "anyway", "because", "before", 
+  "besides", "both", "but", "consequently", "conversely", "either", "equally", 
+  "even", "furthermore", "hence", "however", "if", "inasmuch", "indeed", 
+  "instead", "lest", "likewise", "moreover", "namely", "neither", 
+  "nevertheless", "nonetheless", "nor", "once", "or", "otherwise", "provided", 
+  "since", "so", "still", "than", "that", "thereafter", "therefore", "though", 
+  "thus", "till", "unless", "until", "when", "where", "whereby", "wherefore", 
+  "whereupon", "whereas", "while", "whilst", "yet", 
+  
+  # iv. Determiners, contractions and possessives
+  "a", "all", "an", "any", "couldnt", "didnt", "doesnt", "dont", "double", 
+  "each", "enough", "every", "half", "hed", "he'll", "Her", "hers", "his", 
+  "His", "i'd", "Id", "im", "i'm", "its", "it's", "Ive", "ive", "last", 
+  "little", "many", "mine", "much", "my", "next", "other", "our", "Our", "ours", 
+  "shed", "shell", "Shell", "some", "several", "somewhat", "such", "that", 
+  "the", "their", "theirs", "these", "this", "those", "we", "We", "wed", "were", 
+  "what", "whatever", "whose", "youd", "you'd", "youll", "you'll", "your", 
+  "Your", "youre", "you're", "yours", "youve", "you've", 
+  
+  # v. Filler words 
+  "ah", "bit", "bits","oh", "um", 
+  
+  # vi. Interrogatives, pronouns and related words
+  "another", "anybody", "anyone", "anything", "each other", "everybody", 
+  "everyone", "everything", "he", "hell", "her", "herself", "hes", "him", 
+  "himself", "his", "how", "i", "id", "i'll", "im", "it", "itself", "i've", 
+  "ive", "many", "me", "most", "myself", "no one", "nobody", "none", 
+  "one another", "other", "ourselves", "she", "shed", "shes", "some", 
+  "somebody", "someone", "something", "such", "that", "themselves", "they", 
+  "them", "these","this", "those", "us", "what", "whatever", "whatsoever", 
+  "when", "whenever", "where", "wherever", "which", "whichever", "who", 
+  "whoever", "whom", "whomever", "whose", "whosever", "why", "you", 
+  "yourself", "yourselves",
+  
+  # vii. Modal, auxiliary and other common verbs
+  "be", "been", "being", "bring", "can", "cant", "come", "could", "couldnt", 
+  "did", "do", "does", "done", "fill", "filled", "filling", "fills", "full", 
+  "fuller", "get", "getting", "go", "going", "gone", "gonna", "got", "gotten", 
+  "guess", "had", "has", "have", "having", "held", "hold", "holds", "holding", 
+  "left", "leaving", "leave", "made", "make", "makes", "making", "may", "might", 
+  "mightnt", "must", "mustnt", "need", "neednt", "ought", "oughtnt", "pull", 
+  "push", "pulled", "pushed", "pulls", "pushes", "pulling", "pushing", "sat", 
+  "set", "shall", "shant", "should", "shouldnt", "sit", "sits", "start", 
+  "starts", "starting", "started", "stand", "stands", "stay", "stop", "wait", 
+  "waits", "wanna", "want", "was", "wasnt", "went", "were", "werent", "will", 
+  "wont", "would", "wouldnt",
+  
+  # viii. Number words
+  "billion", "double", "eighth", "eighteen", "eighty", "eleven", "eleventh", 
+  "fifth", "fifteen", "fifty", "first", "four", "fourteen", "fourth", "few", 
+  "hundred", "last", "million", "nineteen", "ninety", "ninth", "none", "one", 
+  "second", "seventh", "seventeen", "seventy", "single", "six", "sixteen", 
+  "sixth", "ten", "tenth", "third", "thirteen", "thirty", "thousand", "three", 
+  "trillion", "triple", "twelfth", "twelve", "twenty", "two", "zero",
+  
+  # ix. Prepositions
+  "about", "above", "across", "after", "against", "along", "amid", "among", 
+  "amongst", "anti", "around", "as", "at", "before", "behind", "below", 
+  "beneath", "beside", "besides", "between", "beyond", "but", "by", 
+  "concerning", "considering", "despite", "down", "during", "except", 
+  "excepting", "excluding", "far", "following", "for", "from", "here", "in", 
+  "inside", "into", "like", "minus", "near", "of", "off", "on", "onto", 
+  "opposite", "outside", "over", "past", "per", "plus", "regarding", "round", 
+  "save", "since", "than", "then", "there", "through", "throughout", "to", 
+  "toward", "towards", "under", "underneath", "unlike", "until", "up", "upon", 
+  "versus", "via", "with", "within", "without", 
+  
+  # x. Time words
+  "afternoon", "annual", "annually", "daily", "day", "hour", "hourly", 
+  "minute", "moment", "night", "nightly", "now", "oclock", "today", 
+  "tomorrow", "week", "weekly", "year", "yearly", "yesterday",
+  
+  # xi. Titles and abbreviations
+  "co", "dr", "ma'am", "madam", "maam", "mr", "mrs", "ms", "mt", "rd", "sir", 
+  "st"
+    
+  )
+```
+
+**Combine default stopwords with term filter list**
+
+-   A dataframe is created below of `all_stopwords` combining default stopwords and terms from the `filter_list`.
+
+```{r}
+all_stopwords <- unique(c(stop_words$word, filter_list))
+filter_list_df <- data.frame(word = filter_list)
+```
+
+#### STEP 2B: LOWERCASE ALL WORDS AND REMOVE STOPWORDS, PUNCTUATION AND NUMBERS {style="color:darkgreen"}
+
+-   Terms saved in `tokens_cleaned` are now lowercased. Stopwords and filter words (`all_stopwords`), punctuation and digits are then removed.
+
+```{r}
+tokens_cleaned <- tokens %>%
+  filter(!word %in% all_stopwords)  %>%
+  mutate(word = tolower(word)) %>% 
+  filter(str_detect(word, "^[a-z]+$"))  
+  
+View(tokens_cleaned)
+dim(tokens_cleaned) 
+```
+
+#### STEP 2C: CALCULATE WORD FREQUENCIES AFTER REMOVING STOPWORDS {style="color: green"}
+
+-   After the stopwords are removed but before lemmatising the text, the word frequencies are counted, sorted and saved.
+
+```{r}
+word_frequency <- tokens_cleaned %>%
+   count(word, sort = TRUE)
+ 
+write_csv(word_frequency, "your/directory/pathway/word_frequency_stopwords_removed.csv")
+```
+
+#### STEP 2D: LEMMATISE ALL WORDS TO ROOT FORM (STEMMING IS NOT DONE) {style="color: green"}
+
+-   Terms are lemmatised to their correct root form with the `tidystem` function `lemmatize_words` but they are not stemmed as stemming returns terms that do not take into account words like irregular verbs (e.g. run and ran).
+-   After lemmatising, the terms are saved again in a separate file.
+
+```{r}
+tokens_cleaned <- tokens_cleaned %>%
+  mutate(word = lemmatize_words(word)) 
+View(tokens_cleaned)
+```
+
+#### STEP 2E: CALCULATE WORD FREQUENCIES AFTER LEMMATISING {style="color:green"}
+
+-   After stopwords are removed and the text is lemmatised to the root form, the word frequencies are counted, sorted and saved.
+
+```{r}
+word_frequency <- tokens_cleaned %>%
+  count(word, sort = TRUE)  
+
+write_csv(word_frequency, "your/directory/pathway/word_frequency_after_lemmatising.csv") 
+```
+
+#### STEP 3A: CREATE A DOCUMENT-TERM MATRIX (DTM) {style="color:green"}
+
+-   A DTM is created as this is the correct format for the LDA program to read and work with.
+
+```{r}
+dtm <- tokens_cleaned %>% 
+  count(doc_id, word) %>%  
+  cast_dtm(doc_id, word, n) 
+
+dtm
+
+dtm_df <- as.data.frame(as.matrix(dtm)) 
+```
+
+#### STEP 3B: BEGIN TOPIC MODELLING WITH LATENT DIRICHLET ALLOCATION (LDA) {style="color:green"}
+
+-   We are now ready to run the `lda_model`. The code below starts with 10 topics with 10 terms each to test the model. The number of topics is the `k` value.
+
+-   Gibbs sampling is applied as this method provides more distinct topics than the default sampling method.
+
+-   The terms are sorted for each topic alphabetically and then the topics are saved to a file at the end of this code.
+
+```{r}
+num_topics <- 10
+
+lda_model <- LDA(dtm, 
+                 k = num_topics, 
+                 method = "Gibbs",    
+                 control = list(seed = 1818)) #This is the random seed I usually use.
+
+topics_terms <- terms(lda_model, 10) 
+topics_terms
+
+topics_df <- as.data.frame(topics_terms)
+topics_df <- cbind(Topic = rownames(topics_df), topics_df) 
+
+sorted_topics_df <- topics_df %>% # Sort terms alphabetically 
+  mutate(across(-Topic, ~sort(.)))
+
+write_csv(topics_df, "your/directory/pathway/lda_topics_10.csv") 
+```
+
+#### STEP 3C: VIEW BETA (PROBABILITY) VALUES, LIKELY TOPICS FOR EACH TEXT, AND HOW MANY TEXTS BELONG TO EACH TOPIC {style="color:green"}
+
+-   The code below can be run to extract and analyse certain results from the LDA model. It first retrieves the beta matrix, which represents the distribution of words across topics, and converts it into a dataframe for inspection.
+
+-   The topic each document is most closely associated with is determined and summarised. A count of documents per topic is also calculated.
+
+-   The document-topic assignments and the topic counts are saved to CSV files.
+
+```{r}
+beta_matrix <- posterior(lda_model)$terms  
+beta_df <- as.data.frame(beta_matrix)
+
+document_topics <- topics(lda_model) 
+
+document_topics_df <- data.frame(
+  doc_id = names(document_topics),
+  topic = as.integer(document_topics)
+)
+
+write_csv(document_topics_df, "your/directory/pathway/topics_by_text.csv")
+
+topic_counts <- data.frame(topic = document_topics) %>%
+  group_by(topic) %>%
+  summarise(count = n())  
+
+write_csv(topic_counts, "your/directory/pathway/topic_counts.csv") 
+```
+
+#### STEP 3D: TOPIC DISTRIBUTION BAR PLOT {style="color:green"}
+
+```{r}
+bar_plot_topic_distribution <- ggplot(topic_counts, aes(x = factor(topic), y = count)) +
+  geom_bar(stat = "identity", fill = "midnightblue") +
+  labs(x = "Topic", y = "Number of documents", title = "Number of documents per topic") +
+  theme(
+  panel.background = element_rect(fill = "linen",
+                                colour = "thistle3",
+                                size = 0.5, linetype = "solid"),
+  panel.grid.major = element_line(size = 0.5, linetype = "solid",
+                                colour = "thistle3"), 
+  panel.grid.minor = element_line(size = 0.25, linetype = "solid",
+                                colour = "thistle3")
+  )
+
+bar_plot_topic_distribution
+
+ggsave("your/directory/pathway/bar_plot_topic_distribution.png", plot = bar_plot_topic_distribution, width = 10, height = 6)
+```
+
+#### STEP 3E: EXTRACT GAMMA VALUES, CONVERT DATA AND CREATE A TOPIC HEATMAP {style="color:green"}
+
+```{r}
+# Extract topic proportions for each document. Rows = documents and columns = topics
+
+lda_gamma <- posterior(lda_model)$topics  
+
+# Create an lda_gamma dataframe
+
+lda_gamma_df <- as.data.frame(lda_gamma) %>%   
+  mutate(doc_id = rownames(.)) %>%              # Preserve the correct document order
+  mutate(doc_id_numeric = as.numeric(gsub("^(\\d+).*", "\\1", doc_id))) %>%  # Capture numbering in document ID and convert from character strings to numeric format
+  arrange(doc_id_numeric) %>% 
+  mutate(Document = paste0("Doc_", seq_len(nrow(.)))) %>% 
+  select(-doc_id, -doc_id_numeric)
+
+# Convert the dataframe to long format
+
+lda_gamma_long <- lda_gamma_df %>%   
+  pivot_longer(
+    cols = -Document,
+    names_to = "Topic",
+    values_to = "Proportion"  # All columns except "Document" will be transposed/re-stacked.
+  )
+
+# Filter using the preserved document IDs
+lda_filtered <- lda_gamma_long %>%  
+  mutate(Topic = factor(Topic, levels = mixedsort(unique(Topic))))
+
+# Create the heatmap
+
+heatmap <- ggplot(lda_filtered, aes(x = factor(Document, levels = unique(Document)), 
+                                    y = Topic, 
+                                    fill = Proportion)) +
+  geom_tile() +
+  scale_x_discrete(labels = function(x) gsub("Doc_", "Text  #", x)) +
+  scale_fill_gradient(low = "lightsteelblue1", high = "midnightblue") +
+  labs(x = "Document", title = "Lukundoo collection topic heatmap") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 60, hjust = 1, size = 8), #Titled x axis lables
+    legend.position = "none"  # Legend is excluded
+  )
+    
+heatmap
+
+ggsave("your/directory/pathway/heatmap.png", plot = heatmap, width = 20, height = 9)
+```
+
+#### **SOURCES** {style="color: green"}
+
+Ajinaja, M. O., Adetunmbi, A. O., Ugwu, C. C., & Popoola, O. S. (2023). Semantic similarity measure for topic modeling using latent Dirichlet allocation and collapsed Gibbs sampling. *Iran Journal of Computer Science*, 6(1), pp. 81–94. <http://dx.doi.org/10.1007/s42044-022-00124-7>
+
+Blei, D.M., Ng, A.Y., & Jordan, M.I. (2003). Latent Dirichlet allocation. *Journal of Machine Learning Research*, 3(Jan), pp. 993–1022. <https://dl.acm.org/doi/10.5555/944919.944937>
+
+Casella, G., & George, E. I. (1992). Explaining the Gibbs sampler. *The American Statistician*, 46(3), pp. 167–174. <https://doi.org/10.1080/00031305.1992.10475878>
+
+Essberger, J. (2006). English Prepositions Listed. <https://www.vocabineer.com/wp-content/uploads/2019/01/150-English-Prepositions.pdf>
+
+Fox, C. (1989). A stop list for general text. *Acm Sigir Forum*, 24(1–2), pp. 19–21. <https://doi.org/10.1145/378881.378888>
+
+Grün, B., & Hornik, K. (2024). Package ‘topicmodels’. CRAN Repository. <https://cran.radicaldevelop.com/web/packages/topicmodels/topicmodels.pdf?utm_source=textcortex&utm_medium=zenochat>
+
+Hellín, C.J., Valledor, A., Cuadrado-Gallego, J.J., Tayebi, A., & Gómez, J. (2023). A Comparative Study on R Packages for Text Mining*. IEEE Access*, 11, 99083–99100. <https://doi.org/10.1109/access.2023.3310818>
+
+Omar, A. (2020). On the digital applications in the thematic literature studies of Emily Dickinson’s poetry. *International Journal of Advanced Computer Science and Applications*, 11(6): 361–365. <https://dx.doi.org/10.14569/IJACSA.2020.0110647>
+
+Rha, L., & Silver, S. (2021). Topic Modeling and Analysis: Comparing the Most Common Topics in 19th-Century Novels Written by Female Writers. *Aresty Rutgers Undergraduate Research Journal*, 1(3), pp. 1–8. <https://doi.org/10.14713/arestyrurj.v1i3.172>
+
+Rinker, T. W. (2018). textstem: Tools for stemming and lemmatizing text. Version 0.1.4. <http://github.com/trinker/textstem>
+
+Silge, J. & Robinson, D. (2017). *Text Mining with R.* Sebastopol, CA: O’Reilly Media. <https://www.tidytextmining.com>
+
+Van Kessel, P. (2019). Overcoming the limitations of topic models with a semi-supervised approach. Pew Research Centre. <https://www.pewresearch.org/decoded/2019/04/10/overcoming-the-limitations-of-topic-models-with-a-semi-supervised-approach>
+
+Weston, S. J., Shryock, I., Light, R., & Fisher, P. A. (2023). Selecting the Number and Labels of Topics in Topic Modeling: A Tutorial. *Advances in Methods and Practices in Psychological Science*, 6(2). <https://doi.org/10.1177/25152459231160105>
+
+White, E. L. (1927). *Lukundoo and Other Stories.* New York: George H. Doran Company. <https://www.gutenberg.org/ebooks/75827>
+
+Wickham, H., Averick, M., Bryan, J., Chang, W., McGowan, L. D., François, R., et al. (2019). Welcome to the tidyverse. *Journal of Open Source Software*, 4(43), 1686. <https://doi.org/10.21105/joss.01686>
+
+Wisdom, A. (2017). Topic Modeling: Optimizing for Human Interpretability. <https://developer.squareup.com/blog/topic-modeling-optimizing-for-human-interpretability>
