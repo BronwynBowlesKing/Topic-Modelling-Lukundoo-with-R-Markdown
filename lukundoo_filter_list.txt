@@ -1,0 +1,121 @@
+ # i. Character names and other proper nouns 
+  "Alfandega", "Singleton", "Van Rieten", "Ralph Stone", "Ralph", "Susie", "Van",
+  "Rieten", "Werner", "Thorkell", "Thwaite", "Vargas", "Rivvin", "Waldo", 
+  "Mattie", "Anna", "Pake", "Ernest", "Paca", "Hibbard", "Buck", "Rex", "Leslie", 
+  "Brundige", "Tom", "Guimaraes", "Alf", "Orodoff", "Twombly", "Etcham", "Hamed", 
+  "Burghash", "Brexington", "Mang-Battu", "Rastus", "Mary", "Amy", "Hofstadir",
+  "Thorstein", "Kenton", "Thordis", "Beverly", "Hassan", "Stone", "Llewellyn", 
+  "Helen", "Pembroke", "Alders", "Radnor", "Thorarna", "Vilgerdson", "Mang",
+  "Battu", "rieten", "mang", "battu", "vilgerdson", "thordis", "beverly", "hassan",
+  "singleton", "van rieten", "mang-battu",   "ralph stone", "ralph", "susie", 
+  "battu", "rastus", "mary", "amy", "alfandega",  "mattie", "anna", "pake", "van",
+  "ernest", "paca", "hibbard", "buck", "rex", "leslie", "hofstadir", "brexington",
+  "brundige", "tom", "guimaraes", "alf", "orodoff", "twombly", "etcham", "hamed", 
+  "burghash", "werner", "thorkell", "thwaite", "vargas", "rivvin", "waldo", 
+  "thorstein", "llewellyn", "helen", "pembroke", "alders", "radnor", "thorarna", 
+    
+  
+  # ii. Common adjectives and adverbs
+  "accurately", "actively", "admittedly", "almost", "already", "alternately", 
+  "always", "artificially", "automatically", "back", "bad", "barely", "big", 
+  "boldly", "calmly", "carelessly", "cautiously", "certainly", "cheerfully", 
+  "clearly", "cleverly", "closely", "coincidentally", "commonly", "complete", 
+  "completely", "consistently", "conveniently", "cooperatively", "correctly", 
+  "creatively", "deeply", "deliberately", "desperately", "dramatically", 
+  "easily", "efficiently", "energetically", "enthusiastically", "exclusively", 
+  "extreme", "extremely", "fairly", "fast", "finally", "freely", "fully", 
+  "generally", "good", "hardly", "highly", "incredibly", "incomplete", 
+  "independently", "instantly", "intensely", "just", "justly", "kindly", 
+  "largely", "lot", "lots", "loosely", "loudly", "mainly", "many", "mere",
+  "merely", "mildly", "most", "mostly", "much", "naturally", "nearly", "no", 
+  "normal", "normally", "obviously", "odd", "oddly", "often", "only", 
+  "originally", "partially", "perfectly", "personally", "pleasantly", "poorly", 
+  "powerfully", "quiet", "quietly", "quick", "quickly", "quite", "rather", 
+  "rarely", "readily", "really", "remarkably", "rightly", "roughly", "sadly", 
+  "safely", "scarcely", "seriously", "sharply", "short", "similarly", "simply", 
+  "slightly", "slow", "slowly", "small", "smoothly", "softly", "solely", 
+  "sometimes", "soon", "speedily", "strongly", "suddenly", "swiftly", "tightly", 
+  "too", "total", "totally", "typical", "typically", "unjustly", "unusual", 
+  "unusually", "usual", "utterly", "vaguely", "very", "vigorously", "violently", 
+  "virtually", "visibly", "warmly", "weakly", "well", "wisely", "wonderfully", 
+  "wrongly", "yes", "apparently",
+  
+  # iii. Conjunctions
+  "accordingly", "addition", "additionally", "after", "again", "along", 
+  "also", "although", "and", "anyhow", "anyway", "because", "before", 
+  "besides", "both", "but", "consequently", "conversely", "either", "equally", 
+  "even", "furthermore", "hence", "however", "if", "inasmuch", "indeed", 
+  "instead", "lest", "likewise", "moreover", "namely", "neither", 
+  "nevertheless", "nonetheless", "nor", "once", "or", "otherwise", "provided", 
+  "since", "so", "still", "than", "that", "thereafter", "therefore", "though", 
+  "thus", "till", "unless", "until", "when", "where", "whereby", "wherefore", 
+  "whereupon", "whereas", "while", "whilst", "yet", 
+  
+  # iv. Determiners, contractions and possessives
+  "a", "all", "an", "any", "couldnt", "didnt", "doesnt", "dont", "double", 
+  "each", "enough", "every", "half", "hed", "he'll", "Her", "hers", "his", 
+  "His", "i'd", "Id", "im", "i'm", "its", "it's", "Ive", "ive", "last", 
+  "little", "many", "mine", "much", "my", "next", "other", "our", "Our", "ours", 
+  "shed", "shell", "Shell", "some", "several", "somewhat", "such", "that", 
+  "the", "their", "theirs", "these", "this", "those", "we", "We", "wed", "were", 
+  "what", "whatever", "whose", "youd", "you'd", "youll", "you'll", "your", 
+  "Your", "youre", "you're", "yours", "youve", "you've", 
+  
+  # v. Filler words 
+  "ah", "bit", "bits","oh", "um", 
+  
+  # vi. Interrogatives, pronouns and related words
+  "another", "anybody", "anyone", "anything", "each other", "everybody", 
+  "everyone", "everything", "he", "hell", "her", "herself", "hes", "him", 
+  "himself", "his", "how", "i", "id", "i'll", "im", "it", "itself", "i've", 
+  "ive", "many", "me", "most", "myself", "no one", "nobody", "none", 
+  "one another", "other", "ourselves", "she", "shed", "shes", "some", 
+  "somebody", "someone", "something", "such", "that", "themselves", "they", 
+  "them", "these","this", "those", "us", "what", "whatever", "whatsoever", 
+  "when", "whenever", "where", "wherever", "which", "whichever", "who", 
+  "whoever", "whom", "whomever", "whose", "whosever", "why", "you", 
+  "yourself", "yourselves",
+  
+  # vii. Modal, auxiliary and other common verbs
+  "be", "been", "being", "bring", "can", "cant", "come", "could", "couldnt", 
+  "did", "do", "does", "done", "fill", "filled", "filling", "fills", "full", 
+  "fuller", "get", "getting", "go", "going", "gone", "gonna", "got", "gotten", 
+  "guess", "had", "has", "have", "having", "held", "hold", "holds", "holding", 
+  "left", "leaving", "leave", "made", "make", "makes", "making", "may", "might", 
+  "mightnt", "must", "mustnt", "need", "neednt", "ought", "oughtnt", "pull", 
+  "push", "pulled", "pushed", "pulls", "pushes", "pulling", "pushing", "sat", 
+  "set", "shall", "shant", "should", "shouldnt", "sit", "sits", "start", 
+  "starts", "starting", "started", "stand", "stands", "stay", "stop", "wait", 
+  "waits", "wanna", "want", "was", "wasnt", "went", "were", "werent", "will", 
+  "wont", "would", "wouldnt",
+  
+  # viii. Number words
+  "billion", "double", "eighth", "eighteen", "eighty", "eleven", "eleventh", 
+  "fifth", "fifteen", "fifty", "first", "four", "fourteen", "fourth", "few", 
+  "hundred", "last", "million", "nineteen", "ninety", "ninth", "none", "one", 
+  "second", "seventh", "seventeen", "seventy", "single", "six", "sixteen", 
+  "sixth", "ten", "tenth", "third", "thirteen", "thirty", "thousand", "three", 
+  "trillion", "triple", "twelfth", "twelve", "twenty", "two", "zero",
+  
+  # ix. Prepositions
+  "about", "above", "across", "after", "against", "along", "amid", "among", 
+  "amongst", "anti", "around", "as", "at", "before", "behind", "below", 
+  "beneath", "beside", "besides", "between", "beyond", "but", "by", 
+  "concerning", "considering", "despite", "down", "during", "except", 
+  "excepting", "excluding", "far", "following", "for", "from", "here", "in", 
+  "inside", "into", "like", "minus", "near", "of", "off", "on", "onto", 
+  "opposite", "outside", "over", "past", "per", "plus", "regarding", "round", 
+  "save", "since", "than", "then", "there", "through", "throughout", "to", 
+  "toward", "towards", "under", "underneath", "unlike", "until", "up", "upon", 
+  "versus", "via", "with", "within", "without", 
+  
+  # x. Time words
+  "afternoon", "annual", "annually", "daily", "day", "hour", "hourly", 
+  "minute", "moment", "night", "nightly", "now", "oclock", "today", 
+  "tomorrow", "week", "weekly", "year", "yearly", "yesterday",
+  
+  # xi. Titles and abbreviations
+  "co", "dr", "ma'am", "madam", "maam", "mr", "mrs", "ms", "mt", "rd", "sir", 
+  "st"
+    
+  
